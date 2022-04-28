@@ -9,19 +9,26 @@
     <p>{{usuario.idade}}</p>
     <input type="text" v-model="usuario.idade"><br>
 
-    <button @click="add()">Add pessoa</button>
-    <button @click="esvaziar()">Esvaziar Lista</button>
+    <button @click="add()">{{ edita ? "Editar" : "Adicionar" }}</button>
+    <button @click="esvaziarLista()">Esvaziar Lista</button>
+    <button @click="limparUsuario()">Limpar Casas</button>
+    {{edita}}
 
-    <ul v-for="(pessoa, key) in listaUsuarios" :key="key">
-      <li>Nome: {{ pessoa.nome }} Idade: {{ pessoa.idade }}</li>
-    </ul>
+    <div id="tabela">
+      <minha-tabela @preenche="preenche" @deletaitem="deletaItem()" :tabela="listaUsuarios" />
+    </div>
 
     <h2 @click="incrementa()">Conta {{conta}}</h2>
+    <h2 @click="decrementa()">Decrementa</h2>
+
     <p>Contador: {{conta}}</p>
 
     <h3>Triplo: {{triplo}}</h3>
 
+
     <button @click="zera()">Zerar</button>
+
+   
 
   </div>
 </template>
@@ -29,26 +36,59 @@
 <script>
 import { useUsuarioStore } from "./store/usuarioStore.js" // store de usuarios
 import { storeToRefs, mapActions } from "pinia" // reatividade
+import MinhaTabela from "./components/tabela.vue"
 
 export default {
   name: 'App',
   components: {
-  }
-  ,
+    MinhaTabela
+  },
   setup() {
     // Usamos a storeToRefs para que seja reativa
     // Mapeamos cada variavel da store
     const {usuario, listaUsuarios, conta, triplo, contador} = storeToRefs(useUsuarioStore())
-    const { incrementa, addListaUsuarios } = mapActions(useUsuarioStore, ["incrementa", "addListaUsuarios"])
+
+    // Mapeamento das Actions
+    const { incrementa, 
+            decrementa, 
+            addListaUsuarios, 
+            deletaItem,
+            esvaziarLista,
+            editaPessoaLista,
+            limparUsuario
+            } = mapActions(useUsuarioStore, 
+                            [ "incrementa", 
+                              "addListaUsuarios", 
+                              "decrementa", 
+                              "deletaItem",
+                              "esvaziarLista",
+                              "editaPessoaLista",
+                              "limparUsuario"                   
+                          ])
+
     return {
-      // Retornamos cada variavel para que sejam visíveis e acessíveis na aplicação. 
+      // Retornamos cada state, actions e getters para que sejam visíveis e acessíveis na aplicação. 
+
+      // States de useUsuarioStore
       usuario,
       listaUsuarios,
       conta,
       triplo,
       contador,
+      // Actions de useUsuarioStore, chamamos elas na view ou em methods executando como funções
       incrementa,
-      addListaUsuarios
+      addListaUsuarios,
+      decrementa,
+      deletaItem,
+      esvaziarLista,
+      editaPessoaLista,
+      limparUsuario
+    }
+  },
+  data() {
+    return {
+      edita: false,
+      indice: ""
     }
   },
   computed: {
@@ -56,22 +96,35 @@ export default {
     // que praticamente faz a mesma coisa que faria aqui
   },
   methods: {
+    preenche(nome, idade, key){
+      this.usuario.nome = nome
+      this.usuario.idade = idade
+      this.indice = key
+      this.edita = true
+    },
     zera(){
       this.conta = 0
-      this.useUsuarioStore.$reset()
     },
     add(){
-      this.addListaUsuarios({
-        "nome": this.usuario.nome,
-        "idade": this.usuario.idade
-      })
+      if(this.edita){
+        this.editaPessoaLista(this.indice, {
+          "nome": this.usuario.nome,
+          "idade": this.usuario.idade
+        })
+
+        this.edita = false
+      }else{
+        this.addListaUsuarios({
+          "nome": this.usuario.nome,
+          "idade": this.usuario.idade
+        })
+      }
+      
 
       this.usuario.nome = ""
       this.usuario.idade = ""
     },
-    esvaziar(){
-      this.listaUsuarios = []
-    }
+
   },
 }
 </script>
@@ -90,5 +143,10 @@ h2 {
 }
 ul li {
   list-style: none;
+}
+#tabela {
+  text-align: center;
+  width: 150px;
+  margin: auto;
 }
 </style>

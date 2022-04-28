@@ -6,8 +6,8 @@ export const useUsuarioStore = defineStore("usuario", {
     state: () => {
         return {
             usuario: {
-                nome: "Maycon",
-                idade: 39
+                nome: "",
+                idade: null
             },
             listaUsuarios: [
                 {"nome": "maycon", "idade": 39},
@@ -25,11 +25,31 @@ export const useUsuarioStore = defineStore("usuario", {
     // actions
 
     actions: {
+        decrementa(){
+            if(this.conta > 0){
+                this.conta--
+            }
+        },
         incrementa(){
             this.conta++
         },
         addListaUsuarios(obj){
             this.listaUsuarios.push(obj)
+        },
+        deletaItem(key){
+            this.listaUsuarios.splice(key, 1)
+        },
+        esvaziarLista(){
+            this.listaUsuarios = []
+        },
+        editaPessoaLista(indice, pessoa){
+            this.listaUsuarios.splice(indice, 1, pessoa)
+        },
+        limparUsuario(){
+            this.usuario = {
+                "nome": "",
+                "idade": ""
+            }
         }
     },
 
